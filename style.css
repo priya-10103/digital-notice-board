@@ -32,6 +32,11 @@ input {
     border: 1px solid #ccc;
 }
 
+#searchInput {
+    margin-top: 10px;
+    width: 100%;
+}
+
 button {
     padding: 10px;
     border: none;
@@ -50,7 +55,4 @@ li {
     background: #f2f2f2;
     padding: 10px;
     border-radius: 8px;
-}
-button {
-    margin-left: 5px;
 }
