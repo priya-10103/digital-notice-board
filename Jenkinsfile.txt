@@ -1,0 +1,24 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone') {
+            steps {
+               git branch: 'main', url: 'https://github.com/priya-10103/digital-notice-board.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building Notice Board...'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                bat 'if not exist C:\\deploy mkdir C:\\deploy'
+                bat 'xcopy * C:\\deploy /E /I /Y'
+            }
+        }
+    }
+}
