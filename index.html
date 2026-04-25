@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Digital Notice Board</title>
+    <title>Digital Notice Board Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="container">
+
     <h1>📢 Digital Notice Board</h1>
+
+    <div id="counter">Total Notices: 0</div>
 
     <div class="input-box">
         <input type="text" id="noticeInput" placeholder="Enter your notice...">
@@ -16,7 +20,12 @@
 
     <input type="text" id="searchInput" placeholder="Search notice..." onkeyup="searchNotice()">
 
+    <div class="btn-row">
+        <button onclick="clearAll()">🧹 Clear All</button>
+    </div>
+
     <ul id="noticeList"></ul>
+
 </div>
 
 <script src="script.js"></script>
