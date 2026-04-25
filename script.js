@@ -1,120 +1,146 @@
-function getNotices() {
+let isDark = false;
+let isAdmin = false;
+let fullscreen = false;
+
+function getData() {
     return JSON.parse(localStorage.getItem("notices")) || [];
 }
 
-function saveNotices(notices) {
-    localStorage.setItem("notices", JSON.stringify(notices));
+function saveData(data) {
+    localStorage.setItem("notices", JSON.stringify(data));
 }
 
 function loadNotices() {
-    displayNotices(getNotices());
-    updateCounter();
+    display(getData());
+    updateCount();
 }
 
 function addNotice() {
-    let input = document.getElementById("noticeInput");
-    let text = input.value.trim();
+    if (!isAdmin) return alert("Admin only!");
 
+    let text = document.getElementById("noticeInput").value;
     if (!text) return;
 
-    let notices = getNotices();
+    let data = getData();
 
-    let notice = {
+    data.unshift({
         text,
         time: new Date().toLocaleString(),
-        priority: confirm("Important notice?") ? "high" : "normal"
-    };
+        priority: confirm("Important?") ? "high" : "normal",
+        pinned: false
+    });
 
-    notices.unshift(notice);
-    saveNotices(notices);
+    saveData(data);
+    document.getElementById("noticeInput").value = "";
 
-    input.value = "";
-    showToast("Notice Added ✅");
+    toast("Added ✅");
     loadNotices();
 }
 
-function displayNotices(notices) {
+function display(data) {
     let list = document.getElementById("noticeList");
     list.innerHTML = "";
 
-    notices.sort((a, b) => (b.priority === "high") - (a.priority === "high"));
+    data.sort((a,b)=> (b.pinned) - (a.pinned));
 
-    notices.forEach((n, i) => {
-        let li = document.createElement("li");
+    data.forEach((n,i)=>{
 
-        li.innerHTML = `
-        <div class="notice-card ${n.priority}">
+        let div = document.createElement("div");
+        div.className = "notice " + n.priority;
+
+        div.innerHTML = `
             <div>
-                <span class="badge ${n.priority}">
-                    ${n.priority === "high" ? "🔥 IMPORTANT" : "📝 NORMAL"}
-                </span>
-                <small> | ${n.time}</small>
+                <b>${n.text}</b>
+                <div class="badge">${n.time}</div>
             </div>
 
-            <p>${n.text}</p>
-
-            <div class="actions">
-                <button onclick="editNotice(${i})">✏️</button>
-                <button onclick="deleteNotice(${i})">❌</button>
-            </div>
-        </div>
+            <button onclick="pin(${i})">📌</button>
+            <button onclick="edit(${i})">✏️</button>
+            <button onclick="del(${i})">❌</button>
         `;
 
-        list.appendChild(li);
+        list.appendChild(div);
     });
 }
 
-function deleteNotice(index) {
-    let notices = getNotices();
-    notices.splice(index, 1);
-    saveNotices(notices);
-    showToast("Deleted ❌");
+function del(i){
+    if (!isAdmin) return;
+
+    let data = getData();
+    data.splice(i,1);
+    saveData(data);
     loadNotices();
 }
 
-function editNotice(index) {
-    let notices = getNotices();
-    let newText = prompt("Edit notice:", notices[index].text);
+function edit(i){
+    if (!isAdmin) return;
 
-    if (newText) {
-        notices[index].text = newText;
-        saveNotices(notices);
-        showToast("Updated ✏️");
+    let data = getData();
+    let t = prompt("Edit:", data[i].text);
+
+    if(t){
+        data[i].text = t;
+        saveData(data);
         loadNotices();
     }
 }
 
-function searchNotice() {
-    let value = document.getElementById("searchInput").value.toLowerCase();
-    let notices = getNotices();
-
-    let filtered = notices.filter(n =>
-        n.text.toLowerCase().includes(value)
-    );
-
-    displayNotices(filtered);
+function pin(i){
+    let data = getData();
+    data[i].pinned = !data[i].pinned;
+    saveData(data);
+    loadNotices();
 }
 
-function clearAll() {
-    if (confirm("Clear all notices?")) {
-        localStorage.removeItem("notices");
-        loadNotices();
-        showToast("Cleared 🧹");
-    }
+function searchNotice(){
+    let v = document.getElementById("searchInput").value.toLowerCase();
+    let data = getData().filter(n=> n.text.toLowerCase().includes(v));
+    display(data);
 }
 
-function updateCounter() {
+function clearAll(){
+    if(!isAdmin) return;
+    localStorage.removeItem("notices");
+    loadNotices();
+}
+
+function updateCount(){
     document.getElementById("counter").innerText =
-        "Total Notices: " + getNotices().length;
+        "Total Notices: " + getData().length;
 }
 
-function showToast(msg) {
-    let toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerText = msg;
-    document.body.appendChild(toast);
-
-    setTimeout(() => toast.remove(), 2000);
+function toast(msg){
+    let t = document.createElement("div");
+    t.className = "toast";
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),2000);
 }
 
+/* DARK MODE */
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+
+/* ADMIN LOGIN */
+function toggleAdmin(){
+    document.getElementById("adminPanel").classList.toggle("hidden");
+}
+
+function unlockAdmin(){
+    let pass = document.getElementById("adminPass").value;
+    if(pass === "1234"){
+        isAdmin = true;
+        toast("Admin Unlocked 🔓");
+    } else {
+        alert("Wrong password");
+    }
+}
+
+/* FULLSCREEN TV MODE */
+function toggleFullscreen(){
+    document.body.classList.toggle("fullscreen");
+}
+
+/* INIT */
 window.onload = loadNotices;
