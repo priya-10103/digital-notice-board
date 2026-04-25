@@ -1,112 +1,95 @@
-let isDark = false;
-let isAdmin = false;
-let fullscreen = false;
+let admin = false;
+let tvMode = false;
 
-function getData() {
-    return JSON.parse(localStorage.getItem("notices")) || [];
+function get() {
+    return JSON.parse(localStorage.getItem("data")) || [];
 }
 
-function saveData(data) {
-    localStorage.setItem("notices", JSON.stringify(data));
+function save(d) {
+    localStorage.setItem("data", JSON.stringify(d));
 }
 
-function loadNotices() {
-    display(getData());
-    updateCount();
+function load() {
+    render(get());
+    document.getElementById("counter").innerText =
+        "Total: " + get().length;
 }
 
-function addNotice() {
-    if (!isAdmin) return alert("Admin only!");
+function add() {
+    if (!admin) return alert("Admin only");
 
-    let text = document.getElementById("noticeInput").value;
+    let text = document.getElementById("text").value;
     if (!text) return;
 
-    let data = getData();
+    let data = get();
 
     data.unshift({
         text,
         time: new Date().toLocaleString(),
-        priority: confirm("Important?") ? "high" : "normal",
-        pinned: false
+        high: confirm("Important?"),
+        pin: false
     });
 
-    saveData(data);
-    document.getElementById("noticeInput").value = "";
+    save(data);
+    document.getElementById("text").value = "";
 
     toast("Added ✅");
-    loadNotices();
+    load();
 }
 
-function display(data) {
-    let list = document.getElementById("noticeList");
-    list.innerHTML = "";
+function render(data) {
+    let box = document.getElementById("list");
+    box.innerHTML = "";
 
-    data.sort((a,b)=> (b.pinned) - (a.pinned));
+    // pinned first
+    data.sort((a,b)=> b.pin - a.pin);
 
     data.forEach((n,i)=>{
 
         let div = document.createElement("div");
-        div.className = "notice " + n.priority;
+        div.className = "card";
+
+        if(n.high) div.classList.add("high");
+        if(n.pin) div.classList.add("pin");
 
         div.innerHTML = `
-            <div>
-                <b>${n.text}</b>
-                <div class="badge">${n.time}</div>
-            </div>
+            <b>${n.text}</b><br>
+            <small>${n.time}</small><br>
 
             <button onclick="pin(${i})">📌</button>
-            <button onclick="edit(${i})">✏️</button>
             <button onclick="del(${i})">❌</button>
         `;
 
-        list.appendChild(div);
+        box.appendChild(div);
     });
 }
 
 function del(i){
-    if (!isAdmin) return;
+    if(!admin) return;
 
-    let data = getData();
-    data.splice(i,1);
-    saveData(data);
-    loadNotices();
-}
-
-function edit(i){
-    if (!isAdmin) return;
-
-    let data = getData();
-    let t = prompt("Edit:", data[i].text);
-
-    if(t){
-        data[i].text = t;
-        saveData(data);
-        loadNotices();
-    }
+    let d = get();
+    d.splice(i,1);
+    save(d);
+    load();
 }
 
 function pin(i){
-    let data = getData();
-    data[i].pinned = !data[i].pinned;
-    saveData(data);
-    loadNotices();
+    let d = get();
+    d[i].pin = !d[i].pin;
+    save(d);
+    load();
 }
 
-function searchNotice(){
-    let v = document.getElementById("searchInput").value.toLowerCase();
-    let data = getData().filter(n=> n.text.toLowerCase().includes(v));
-    display(data);
+function search(){
+    let v = document.getElementById("search").value.toLowerCase();
+    let d = get().filter(x => x.text.toLowerCase().includes(v));
+    render(d);
 }
 
 function clearAll(){
-    if(!isAdmin) return;
-    localStorage.removeItem("notices");
-    loadNotices();
-}
-
-function updateCount(){
-    document.getElementById("counter").innerText =
-        "Total Notices: " + getData().length;
+    if(!admin) return;
+    localStorage.removeItem("data");
+    load();
 }
 
 function toast(msg){
@@ -124,23 +107,24 @@ function toggleDark(){
 
 /* ADMIN LOGIN */
 function toggleAdmin(){
-    document.getElementById("adminPanel").classList.toggle("hidden");
+    document.getElementById("adminBox").classList.toggle("hidden");
 }
 
-function unlockAdmin(){
-    let pass = document.getElementById("adminPass").value;
-    if(pass === "1234"){
-        isAdmin = true;
-        toast("Admin Unlocked 🔓");
+function login(){
+    let p = document.getElementById("pass").value;
+    if(p === "1234"){
+        admin = true;
+        toast("Admin ON 🔓");
     } else {
         alert("Wrong password");
     }
 }
 
-/* FULLSCREEN TV MODE */
-function toggleFullscreen(){
-    document.body.classList.toggle("fullscreen");
+/* TV MODE */
+function toggleTV(){
+    tvMode = !tvMode;
+    document.body.classList.toggle("tv");
 }
 
 /* INIT */
-window.onload = loadNotices;
+window.onload = load;
